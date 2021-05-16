@@ -2,11 +2,13 @@
 
 entrypoints Program ;
 
-Program.   Program ::= [Function] ;
+Program.   Program ::= [Stmt];
 
 -- statements ----------------------------------------------
 
 Block.     Block ::= "{" [Stmt] "}" ;
+
+StmtFun.   Stmt ::= Function;
 
 separator  Stmt "" ;
 
@@ -79,6 +81,14 @@ separator  Type "," ;
 
 separator FunType ",";
 
+-- Arrays -------------------------------------------------
+
+ArrayType. Type ::= Type "[" Integer "]";
+
+ArrayGet. AGet ::= Ident "[" Integer "]";
+
+ArraySet. Stmt ::= AGet "=" Expr;
+
 -- TUPLES -------------------------------------------------
 
 TupleUnpack. Stmt ::= UnpackedTuple "=" Ident;
@@ -114,6 +124,8 @@ ELitChar.  Expr6 ::= Char;
 ELitTrue.  Expr6 ::= "True" ;
 
 ELitFalse. Expr6 ::= "False" ;
+
+ArrGetExpr. Expr6 ::= AGet;
 
 EApp.      Expr6 ::= Ident "(" [Expr] ")" ;
 

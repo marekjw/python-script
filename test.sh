@@ -1,12 +1,12 @@
-cd dist
+cd src
 bnfc --haskell -d   -m ../grammar/PythonScript.cf  &&  make
 cd ..
 
 echo "TESTING..."
 
-for testcase in $2/*.ps 
+for testcase in $1/*.ps 
 do
-    $1 < ${testcase} > /dev/null
+    ./src/PythonScript/Test < ${testcase} > /dev/null
     if [[ "$?" -eq 1 ]] 
     then
         echo "FAIL  $testcase"
