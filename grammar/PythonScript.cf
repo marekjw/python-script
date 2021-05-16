@@ -2,15 +2,7 @@
 
 entrypoints Program ;
 
-Program.   Program ::= [TopDef] ;
-
-FnDef.	   TopDef ::= Type Ident "(" [Arg] ")" Block ;
-
-separator nonempty TopDef "" ;
-
-Arg. 	   Arg ::= Type Ident;
-
-separator  Arg "," ;
+Program.   Program ::= [Function] ;
 
 -- statements ----------------------------------------------
 
@@ -40,6 +32,8 @@ Ret.       Stmt ::= "return" Expr ";" ;
 
 VRet.      Stmt ::= "return" ";" ;
 
+TRet.      Stmt ::= "\\return" Expr ";" ;
+
 Cond.      Stmt ::= "if" "(" Expr ")" Stmt  ;
 
 CondElse.  Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt  ;
@@ -50,6 +44,21 @@ SExp.      Stmt ::= Expr  ";" ;
 
 Print.     Stmt ::= "print" "(" [Expr] ")";
 
+ForLoop.   Stmt ::= "for" "(" Stmt  Expr ";" Stmt ")" Stmt ;
+
+-- FUNCTIONS -----------------------------------------------
+FnDef.	   Function ::= Type Ident "(" [Arg] ")" Block ;
+
+separator nonempty Function "" ;
+
+Arg. 	   Arg ::= FunType Ident;
+
+separator  Arg "," ;
+
+Reference. FunType ::= "&" Type;
+
+ByValue. FunType ::= Type;
+
 -- Types ---------------------------------------------------
 
 Int.       Type ::= "int" ;
@@ -58,19 +67,49 @@ Str.       Type ::= "string" ;
 
 Bool.      Type ::= "bool" ;
 
+Char.      Type ::= "char" ;
+
 Void.      Type ::= "void" ;
 
 Tuple.     Type ::= "(" [Type] ")";
 
-internal   Fun. Type ::= Type "(" [Type] ")" ;
+internal   Fun. Type ::= Type "(" [FunType] ")" ;
 
 separator  Type "," ;
+
+separator FunType ",";
+
+-- TUPLES -------------------------------------------------
+
+TupleUnpack. Stmt ::= UnpackedTuple "=" Ident;
+
+TupleUnpackStruct. UnpackedTuple ::= "("[UnpackedArg]")";
+
+separator UnpackedArg ",";
+
+HowToUnpackVar. UnpackedArg ::= Type Ident;
+
+HowToUnpackTup. UnpackedArg ::= UnpackedTuple;
+
+-- ANONYMUS FUNCTIONS -------------------------------------
+
+LambdaFun. Type ::= "\\(" [FunType] ")" "=>" Type;
+
+LambdaFunVal. Expr7 ::= "\\(" [Arg] ")" "=>" Stmt;
+
+-- GENERATORS ---------------------------------------------
+
+GenDef. Stmt ::= "generator" "<" Type ">" Ident "(" [Arg] ")" Stmt;
+
+Yield. Stmt ::= "yeet" Expr;
 
 -- Expressions ---------------------------------------------
 
 EVar.      Expr6 ::= Ident ;
 
 ELitInt.   Expr6 ::= Integer ;
+
+ELitChar.  Expr6 ::= Char;
 
 ELitTrue.  Expr6 ::= "True" ;
 
@@ -96,7 +135,7 @@ EOr.       Expr ::= Expr1 "||" Expr ;
 
 TupleExpr. Expr ::= "(" [Expr] ")";
 
-coercions  Expr 6 ;
+coercions  Expr 7 ;
 
 separator  Expr "," ;
 
