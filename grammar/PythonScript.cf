@@ -10,7 +10,7 @@ Block.     Block ::= "{" [Stmt] "}" ;
 
 StmtFun.   Stmt ::= Function;
 
-separator  Stmt "" ;
+separator  Stmt "";
 
 Empty.     Stmt ::= ";" ;
 
@@ -44,7 +44,7 @@ While.     Stmt ::= "while" "(" Expr ")" Stmt ;
 
 SExp.      Stmt ::= Expr  ";" ;
 
-Print.     Stmt ::= "print" "(" [Expr] ")";
+Print.     Stmt ::= "print" "(" [Expr] ")" ";";
 
 ForLoop.   Stmt ::= "for" "(" Stmt  Expr ";" Stmt ")" Stmt ;
 

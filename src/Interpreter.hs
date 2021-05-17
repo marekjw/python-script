@@ -6,18 +6,20 @@ import Control.Monad.State
 import Data.List
 import Data.Map as Map
 import Data.Maybe
+import Env
 import Eval
 import PythonScript.Abs
 import Types (Context, MemVal (BoolVal, IntVal), MyEnv, ReturnResult)
 import Variables (declareVariables)
 
-returnNothing :: Context (MyEnv, ReturnResult)
-returnNothing = do
-  env <- ask
-  return (env, Nothing)
+returnNothing :: Context MyEnv
+returnNothing = ask
 
-execStmt :: Stmt -> Context (MyEnv, ReturnResult)
-execStmt (BStmt (Block stmts)) = runStatemets stmts
+execStmt :: Stmt -> Context MyEnv
+execStmt (BStmt (Block stmts)) = do
+  env <- ask
+  runStatemets stmts
+  return env
 -- print
 execStmt (Print es) = do
   str <- evalExpressions es
@@ -26,8 +28,13 @@ execStmt (Print es) = do
 
 -- variables
 execStmt (Decl t items) = do
-  env <- declareVariables t items
+  declareVariables t items
+execStmt (Ass ident e) = do
+  res <- evalExpression e
+  env <- ask
+  setMem ident res
   returnNothing
+
 -- if
 execStmt (Cond cond stmt) = do
   BoolVal res <- evalExpression cond
@@ -40,13 +47,23 @@ execStmt (CondElse cond a b) = do
     then execStmt a
     else execStmt b
 
+-- while
+execStmt (While e code) = do
+  env <- ask
+  BoolVal res <- evalExpression e
+  if res
+    then do
+      execStmt code
+      execStmt (While e code)
+    else return env
+
 -- empty
 execStmt Empty = returnNothing
 
-runStatemets :: [Stmt] -> Context (MyEnv, ReturnResult)
-runStatemets [] = returnNothing
+runStatemets :: [Stmt] -> Context MyEnv
+runStatemets [] = ask
 runStatemets (stmt : rest) = do
-  execStmt stmt
-  runStatemets rest
+  env <- execStmt stmt
+  local (const env) $ runStatemets rest
 
 runProgram prog = runExceptT $ runStateT (runReaderT (runStatemets prog) Map.empty) (Map.empty, 0)

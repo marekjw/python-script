@@ -1,5 +1,6 @@
 module Eval where
 
+import Env
 import PythonScript.Abs
 import Types
 
@@ -14,19 +15,28 @@ evalRelOp NE x y = x /= y
 evalRelOp LE x y = x <= y
 
 evalExpression :: Expr -> Context MemVal
+-- math
 evalExpression (EAdd x op y) = do
   IntVal r1 <- evalExpression x
   IntVal r2 <- evalExpression y
   return $ IntVal $ evalAddOp op r1 r2
+evalExpression (Neg e) = do
+  IntVal res <- evalExpression e
+  return $ IntVal $ - res
+-- logical operation
 evalExpression (ERel a op b) = do
   r1 <- evalExpression a
   r2 <- evalExpression b
   return $ BoolVal $ evalRelOp op r1 r2
+
+--literals
 evalExpression (EString s) = return $ StringVal s
 evalExpression (ELitInt i) = return $ IntVal i
 evalExpression ELitTrue = return $ BoolVal True
 evalExpression ELitFalse = return $ BoolVal False
 evalExpression (ELitChar c) = return $ CharVal c
+-- variables
+evalExpression (EVar ident) = getMem ident
 
 evalExpressions :: [Expr] -> Context [MemVal]
 evalExpressions = mapM evalExpression
