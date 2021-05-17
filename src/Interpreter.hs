@@ -15,6 +15,17 @@ import Variables (declareVariables)
 returnNothing :: Context MyEnv
 returnNothing = ask
 
+-- helper function
+execFor :: Expr -> Stmt -> Stmt -> Context ()
+execFor cond inc code = do
+  BoolVal res <- evalExpression cond
+  if res
+    then do
+      execStmt code
+      execStmt inc
+      execFor cond inc code
+    else pure ()
+
 execStmt :: Stmt -> Context MyEnv
 execStmt (BStmt (Block stmts)) = do
   env <- ask
@@ -33,6 +44,14 @@ execStmt (Ass ident e) = do
   res <- evalExpression e
   env <- ask
   setMem ident res
+  returnNothing
+execStmt (Incr ident) = do
+  IntVal val <- getMem ident
+  setMem ident $ IntVal $ val + 1
+  returnNothing
+execStmt (Decr ident) = do
+  IntVal val <- getMem ident
+  setMem ident $ IntVal $ val - 1
   returnNothing
 
 -- if
@@ -56,6 +75,13 @@ execStmt (While e code) = do
       execStmt code
       execStmt (While e code)
     else return env
+
+-- for loop
+execStmt (ForLoop init cond inc code) = do
+  prvs_env <- ask
+  env <- execStmt init
+  local (const env) $ execFor cond inc code
+  return prvs_env
 
 -- empty
 execStmt Empty = returnNothing
