@@ -15,7 +15,7 @@ type Loc = Integer
 
 type MyEnv = Map.Map VariableName Loc
 
-data MemVal = BoolVal Bool | IntVal Integer | StringVal String | VoidVal | CharVal Char
+data MemVal = BoolVal Bool | IntVal Integer | StringVal String | VoidVal | CharVal Char deriving (Eq, Ord)
 
 instance Show MemVal where
   show (BoolVal a) = show a
