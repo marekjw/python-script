@@ -15,7 +15,24 @@ type Loc = Integer
 
 type MyEnv = Map.Map VariableName Loc
 
-data MemVal = BoolVal Bool | IntVal Integer | StringVal String | VoidVal | CharVal Char deriving (Eq, Ord)
+data TupleVal
+  = List TupleVal
+  | MemVal
+
+data PassType = ByValue | ByRef
+
+type FunArg = (Ident, Type, PassType)
+
+type FunArgList = [FunArg]
+
+type FuncDef = (Block, FunArgList, Type)
+
+data MemVal
+  = BoolVal Bool
+  | IntVal Integer
+  | StringVal String
+  | CharVal Char
+  | FunVal FuncDef
 
 instance Show MemVal where
   show (BoolVal a) = show a
@@ -23,10 +40,25 @@ instance Show MemVal where
   show (StringVal a) = show a
   show (CharVal a) = show a
 
+instance Eq MemVal where
+  (==) (BoolVal a) (BoolVal b) = a == b
+  (==) (IntVal a) (IntVal b) = a == b
+  (==) (StringVal a) (StringVal b) = a == b
+  (==) (CharVal a) (CharVal b) = a == b
+
+instance Ord MemVal where
+  (<=) (BoolVal a) (BoolVal b) = a <= b
+  (<=) (IntVal a) (IntVal b) = a <= b
+  (<=) (StringVal a) (StringVal b) = a <= b
+  (<=) (CharVal a) (CharVal b) = a <= b
+
 type MyState = Map.Map Loc MemVal
 
 type MyStore = (MyState, Loc)
 
-data RuntimeExceptions = DivisionByZeroException | NoReturnException | NoStructFieldException String | OutOfRangeExeption Integer deriving (Show)
+data RuntimeExceptions
+  = DivisionByZeroException
+  | NoReturnException
+  deriving (Show)
 
 type Context = ReaderT MyEnv (StateT MyStore (ExceptT RuntimeExceptions IO))

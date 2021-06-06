@@ -9,8 +9,15 @@ import Data.Maybe
 import Env
 import Eval
 import PythonScript.Abs
-import Types (Context, MemVal (BoolVal, IntVal), MyEnv, ReturnResult)
-import Variables (declareVariables)
+import Types
+  ( Context,
+    FunArg,
+    MemVal (BoolVal, CharVal, FunVal, IntVal, StringVal),
+    MyEnv,
+    PassType (ByRef, ByValue),
+    ReturnResult,
+  )
+import Variables (declareVariable, declareVariables)
 
 returnNothing :: Context MyEnv
 returnNothing = ask
@@ -25,6 +32,10 @@ execFor cond inc code = do
       execStmt inc
       execFor cond inc code
     else pure ()
+
+argToFuncArg :: Arg -> FunArg
+argToFuncArg (Arg (Reference t) ident) = (ident, t, ByRef)
+argToFuncArg (Arg (PythonScript.Abs.ByValue t) ident) = (ident, t, Types.ByValue)
 
 execStmt :: Stmt -> Context MyEnv
 execStmt (BStmt (Block stmts)) = do
@@ -82,6 +93,16 @@ execStmt (ForLoop init cond inc code) = do
   env <- execStmt init
   local (const env) $ execFor cond inc code
   return prvs_env
+
+-- functions
+
+execStmt (FnDef t ident args code) = do
+  env <- ask
+  newMem ident (FunVal (code, Data.List.map argToFuncArg args, t)) env
+
+-- tuples
+
+-- generators
 
 -- empty
 execStmt Empty = returnNothing

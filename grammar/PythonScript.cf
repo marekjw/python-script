@@ -8,8 +8,6 @@ Program.   Program ::= [Stmt];
 
 Block.     Block ::= "{" [Stmt] "}" ;
 
-StmtFun.   Stmt ::= Function;
-
 separator  Stmt "";
 
 Empty.     Stmt ::= ";" ;
@@ -49,9 +47,7 @@ Print.     Stmt ::= "print" "(" [Expr] ")" ";";
 ForLoop.   Stmt ::= "for" "(" Stmt  Expr ";" Stmt ")" Stmt ;
 
 -- FUNCTIONS -----------------------------------------------
-FnDef.	   Function ::= Type Ident "(" [Arg] ")" Block ;
-
-separator nonempty Function "" ;
+FnDef.	   Stmt ::= Type Ident "(" [Arg] ")" Block ;
 
 Arg. 	   Arg ::= FunType Ident;
 
