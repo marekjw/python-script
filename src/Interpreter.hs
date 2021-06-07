@@ -10,6 +10,8 @@ import Env
 import PythonScript.Abs
 import Types
 
+-- helper function
+
 returnNothing :: Context (MyEnv, ReturnResult)
 returnNothing = do
   env <- ask
@@ -71,19 +73,24 @@ evalExpression (ELitChar c) = return $ CharVal c
 -- variables
 evalExpression (EVar ident) = getMem ident
 
+-- call function
+
 evalExpressions :: [Expr] -> Context [MemVal]
 evalExpressions = mapM evalExpression
 
 -- helper function
-execFor :: Expr -> Stmt -> Stmt -> Context ()
+execFor :: Expr -> Stmt -> Stmt -> Context (MyEnv, ReturnResult)
 execFor cond inc code = do
   BoolVal res <- evalExpression cond
   if res
     then do
-      execStmt code
-      execStmt inc
-      execFor cond inc code
-    else pure ()
+      (env, res) <- execStmt code
+      if isNothing res
+        then do
+          execStmt inc
+          execFor cond inc code
+        else return (env, res)
+    else returnNothing
 
 argToFuncArg :: Arg -> FunArg
 argToFuncArg (Arg (Reference t) ident) = (ident, t, ByRef)
@@ -143,15 +150,17 @@ execStmt (While e code) = do
 -- for loop
 execStmt (ForLoop init cond inc code) = do
   prvs_env <- ask
-  env <- execStmt init
-  execFor cond inc code
-  return (prvs_env, Nothing)
+  execStmt init
+  (env, _) <- execStmt init
+  local (const env) $ do
+    (_, res) <- execFor cond inc code
+    return (prvs_env, res)
 
 -- functions
 
 execStmt (FnDef t ident args code) = do
   env <- ask
-  newMem ident (FuncVal (code, Data.List.map argToFuncArg args, t)) env
+  newMem ident (FuncVal (code, Data.List.map argToFuncArg args, t, env)) env
   returnNothing
 execStmt (Ret expr) = do
   res <- evalExpression expr

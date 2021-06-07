@@ -25,7 +25,7 @@ type FunArg = (Ident, Type, PassType)
 
 type FunArgList = [FunArg]
 
-type FuncDef = (Block, FunArgList, Type)
+type FuncDef = (Block, FunArgList, Type, MyEnv)
 
 data MemVal
   = BoolVal Bool
