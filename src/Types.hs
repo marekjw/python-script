@@ -32,13 +32,15 @@ data MemVal
   | IntVal Integer
   | StringVal String
   | CharVal Char
-  | FunVal FuncDef
+  | FuncVal FuncDef
+  | VoidVal
 
 instance Show MemVal where
   show (BoolVal a) = show a
   show (IntVal a) = show a
   show (StringVal a) = show a
   show (CharVal a) = show a
+  show VoidVal = "--void--"
 
 instance Eq MemVal where
   (==) (BoolVal a) (BoolVal b) = a == b
