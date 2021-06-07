@@ -92,8 +92,8 @@ argToFuncArg (Arg (PythonScript.Abs.ByValue t) ident) = (ident, t, Types.ByValue
 execStmt :: Stmt -> Context (MyEnv, ReturnResult)
 execStmt (BStmt (Block stmts)) = do
   env <- ask
-  runStatemets stmts
-  return (env, Nothing)
+  (_, ret) <- runStatemets stmts
+  return (env, ret)
 -- print
 execStmt (Print es) = do
   str <- evalExpressions es
@@ -157,6 +157,9 @@ execStmt (Ret expr) = do
   res <- evalExpression expr
   env <- ask
   return (env, Just res)
+execStmt VRet = do
+  env <- ask
+  return (env, Just VoidVal)
 -- tuples
 
 -- generators
