@@ -17,6 +17,22 @@ returnNothing = do
   env <- ask
   return (env, Nothing)
 
+parseFuncArgs :: FunArgList -> [Expr] -> MyEnv -> Context MyEnv
+parseFuncArgs ((ident, t, passType) : restFunArgs) (expr : restExpr) acc_env =
+  case passType of
+    Types.ByValue -> do
+      val <- evalExpression expr
+      new_env <- newMem ident val acc_env
+      parseFuncArgs restFunArgs restExpr new_env
+    Types.ByRef ->
+      case expr of
+        EVar ident -> do
+          new_env <- rewireMem ident acc_env
+          parseFuncArgs restFunArgs restExpr new_env
+        _ -> throwError $ WrongArgument "Cannot pass value by reference"
+parseFuncArgs [] [] acc = return acc
+parseFuncArgs _ _ _ = throwError InvalidArgumentCount
+
 -- variables
 
 defaultVal :: Type -> MemVal
@@ -72,8 +88,20 @@ evalExpression ELitFalse = return $ BoolVal False
 evalExpression (ELitChar c) = return $ CharVal c
 -- variables
 evalExpression (EVar ident) = getMem ident
-
 -- call function
+
+evalExpression (EApp ident args) = do
+  FuncVal (Block code, f_args, t, f_env) <- getMem ident
+  env <- ask
+  func_ready_env <- parseFuncArgs f_args args f_env
+  local (const func_ready_env) $ do
+    (_, res) <- runStatemets code
+    case res of
+      Nothing ->
+        if t == Void
+          then return VoidVal
+          else throwError NoReturnException
+      Just r -> return r
 
 evalExpressions :: [Expr] -> Context [MemVal]
 evalExpressions = mapM evalExpression
@@ -160,8 +188,8 @@ execStmt (ForLoop init cond inc code) = do
 
 execStmt (FnDef t ident args code) = do
   env <- ask
-  newMem ident (FuncVal (code, Data.List.map argToFuncArg args, t, env)) env
-  returnNothing
+  res_env <- newMem ident (FuncVal (code, Data.List.map argToFuncArg args, t, env)) env
+  return (res_env, Nothing)
 execStmt (Ret expr) = do
   res <- evalExpression expr
   env <- ask
@@ -169,6 +197,9 @@ execStmt (Ret expr) = do
 execStmt VRet = do
   env <- ask
   return (env, Just VoidVal)
+execStmt (SExp e) = do
+  evalExpression e
+  returnNothing
 -- tuples
 
 -- generators

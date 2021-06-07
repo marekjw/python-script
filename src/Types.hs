@@ -61,6 +61,9 @@ type MyStore = (MyState, Loc)
 data RuntimeExceptions
   = DivisionByZeroException
   | NoReturnException
+  | WrongArgument String
+  | VariableNotFound
+  | InvalidArgumentCount
   deriving (Show)
 
 type Context = ReaderT MyEnv (StateT MyStore (ExceptT RuntimeExceptions IO))

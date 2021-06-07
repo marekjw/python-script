@@ -4,6 +4,7 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Map as Map
+import Data.Maybe
 import PythonScript.Abs
 import Types
 
@@ -17,6 +18,15 @@ newMem (Ident i) val env = do
 findLoc :: Ident -> Context (Maybe Loc)
 findLoc (Ident i) = do
   asks (Map.lookup i)
+
+rewireMem :: Ident -> MyEnv -> Context MyEnv
+rewireMem (Ident i) env = do
+  loc <- findLoc (Ident i)
+  case loc of
+    Nothing -> throwError VariableNotFound
+    Just l -> do
+      let env_updated = Map.insert i l env
+      return env_updated
 
 setMem :: Ident -> MemVal -> Context ()
 setMem i val = do
