@@ -118,6 +118,16 @@ evalExpression (EApp ident args) = do
           else throwError NoReturnException
       Just r -> return r
 
+-- lambda function
+
+evalExpression (LambdaFunVal args code) = do
+  env <- ask
+  case code of
+    (BStmt block) -> do
+      return $ FuncVal (block, Data.List.map argToFuncArg args, Void, env)
+    _ -> do
+      return $ FuncVal (Block [code], Data.List.map argToFuncArg args, Void, env)
+
 -- tuples expressions
 evalExpression (ETuple exprs) = do
   res <- evalExpressions exprs
