@@ -75,6 +75,20 @@ evalExpression (EAdd x op y) = do
 evalExpression (Neg e) = do
   IntVal res <- evalExpression e
   return $ IntVal $ - res
+evalExpression (EMul expr1 op expr2) = do
+  IntVal r1 <- evalExpression expr1
+  IntVal r2 <- evalExpression expr2
+  case op of
+    Times -> return $ IntVal $ r1 * r2
+    Div ->
+      if r2 == 0
+        then throwError DivisionByZeroException
+        else return $ IntVal $ div r1 r2
+    Mod ->
+      if r2 == 0
+        then throwError DivisionByZeroException
+        else return $ IntVal $ mod r1 r2
+
 -- logical operation
 evalExpression (ERel a op b) = do
   r1 <- evalExpression a
