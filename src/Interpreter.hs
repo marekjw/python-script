@@ -8,6 +8,7 @@ import Data.Map as Map
 import Data.Maybe
 import Env
 import PythonScript.Abs
+import Tuples
 import Types
 
 -- helper function
@@ -103,6 +104,11 @@ evalExpression (EApp ident args) = do
           else throwError NoReturnException
       Just r -> return r
 
+-- tuples expressions
+evalExpression (ETuple exprs) = do
+  res <- evalExpressions exprs
+  return $ TupleVal res
+
 evalExpressions :: [Expr] -> Context [MemVal]
 evalExpressions = mapM evalExpression
 
@@ -121,7 +127,7 @@ execFor cond inc code = do
     else returnNothing
 
 argToFuncArg :: Arg -> FunArg
-argToFuncArg (Arg (Reference t) ident) = (ident, t, ByRef)
+argToFuncArg (Arg (ByReference t) ident) = (ident, t, ByRef)
 argToFuncArg (Arg (PythonScript.Abs.ByValue t) ident) = (ident, t, Types.ByValue)
 
 execStmt :: Stmt -> Context (MyEnv, ReturnResult)
@@ -200,7 +206,14 @@ execStmt VRet = do
 execStmt (SExp e) = do
   evalExpression e
   returnNothing
+
 -- tuples
+
+execStmt (TupleUnpack (TupleUnpackStruct unpacked) expr) = do
+  (TupleVal res) <- evalExpression expr
+  env <- ask
+  env_upd <- execUnpackTuple unpacked res env
+  return (env_upd, Nothing)
 
 -- generators
 

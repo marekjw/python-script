@@ -69,7 +69,7 @@ Char.      Type ::= "char" ;
 
 Void.      Type ::= "void" ;
 
-Tuple.     Type ::= "(" [Type] ")";
+TupleType.     Type ::= "(" [Type] ")";
 
 internal   Fun. Type ::= Type "(" [FunType] ")" ;
 
@@ -87,15 +87,17 @@ ArraySet. Stmt ::= AGet "=" Expr;
 
 -- TUPLES -------------------------------------------------
 
-TupleUnpack. Stmt ::= UnpackedTuple "=" Ident;
+TupleUnpack. Stmt ::= UnpackedTuple "=" Expr;
 
 TupleUnpackStruct. UnpackedTuple ::= "("[UnpackedArg]")";
 
 separator UnpackedArg ",";
 
-HowToUnpackVar. UnpackedArg ::= Type Ident;
+UnpackDeclare. UnpackedArg ::= Type Ident;
 
-HowToUnpackTup. UnpackedArg ::= UnpackedTuple;
+UnpackAssign. UnpackedArg ::= Ident;
+
+UnpackRec.    UnpackedArg ::= UnpackedTuple;
 
 -- ANONYMUS FUNCTIONS -------------------------------------
 
@@ -121,6 +123,8 @@ ELitTrue.  Expr6 ::= "True" ;
 
 ELitFalse. Expr6 ::= "False" ;
 
+ETuple.    Expr6 ::= "(" [Expr] ")";
+
 ArrGetExpr. Expr6 ::= AGet;
 
 EApp.      Expr6 ::= Ident "(" [Expr] ")" ;
@@ -140,8 +144,6 @@ ERel.      Expr2 ::= Expr2 RelOp Expr3 ;
 EAnd.      Expr1 ::= Expr2 "&&" Expr1 ;
 
 EOr.       Expr ::= Expr1 "||" Expr ;
-
-TupleExpr. Expr ::= "(" [Expr] ")";
 
 coercions  Expr 7 ;
 

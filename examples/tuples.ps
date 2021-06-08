@@ -1,6 +1,9 @@
-int main(){
-    (int, int) dwojka = (3, 5);
-    ((int , int), int, string ) krotka = (dwojka, 5, "przyklad");
-    (int a, int b) = dwojka;
-    print(a, b, dwojka); // out 3, 5, (3, 5)
-}
+(int, char, (int, int)) a = (1, 'a', (2+2, 13));
+print(a);
+
+(int c, int d) = (1, 2);
+
+print(c, d, "should be (1,2)");
+
+((int e, int f), (int, char, string) g) = ((4, 2), (6, '9', "aaa"));
+print(e, f, g, "should be 4, 2, (6, '9', aaa)");
