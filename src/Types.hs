@@ -62,7 +62,7 @@ data RuntimeExceptions
   = DivisionByZeroException
   | NoReturnException
   | WrongArgument String
-  | VariableNotFound
+  | VariableNotFound String
   | InvalidArgumentCount
   deriving (Show)
 

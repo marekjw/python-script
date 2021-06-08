@@ -26,8 +26,8 @@ parseFuncArgs ((ident, t, passType) : restFunArgs) (expr : restExpr) acc_env =
       parseFuncArgs restFunArgs restExpr new_env
     Types.ByRef ->
       case expr of
-        EVar ident -> do
-          new_env <- rewireMem ident acc_env
+        EVar ref_ident -> do
+          new_env <- rewireMem ref_ident ident acc_env
           parseFuncArgs restFunArgs restExpr new_env
         _ -> throwError $ WrongArgument "Cannot pass value by reference"
 parseFuncArgs [] [] acc = return acc

@@ -53,7 +53,7 @@ Arg. 	   Arg ::= FunType Ident;
 
 separator  Arg "," ;
 
-Reference. FunType ::= "&" Type;
+ByReference. FunType ::= "&" Type;
 
 ByValue. FunType ::= Type;
 

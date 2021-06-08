@@ -19,13 +19,14 @@ findLoc :: Ident -> Context (Maybe Loc)
 findLoc (Ident i) = do
   asks (Map.lookup i)
 
-rewireMem :: Ident -> MyEnv -> Context MyEnv
-rewireMem (Ident i) env = do
-  loc <- findLoc (Ident i)
+-- prievious Ident, new Ident
+rewireMem :: Ident -> Ident -> MyEnv -> Context MyEnv
+rewireMem (Ident prvsI) (Ident newI) env = do
+  loc <- findLoc (Ident prvsI)
   case loc of
-    Nothing -> throwError VariableNotFound
+    Nothing -> throwError $ VariableNotFound $ show prvsI
     Just l -> do
-      let env_updated = Map.insert i l env
+      let env_updated = Map.insert newI l env
       return env_updated
 
 setMem :: Ident -> MemVal -> Context ()
@@ -35,8 +36,7 @@ setMem i val = do
   case locRes of
     Just loc ->
       put (Map.insert loc val store, next_loc)
-    Nothing -> do
-      liftIO $ putStrLn "Variable not found"
+    Nothing -> throwError $ VariableNotFound $ show i
 
 getMem :: Ident -> Context MemVal
 getMem (Ident i) = do
@@ -48,5 +48,5 @@ getMem (Ident i) = do
       let Just val = Map.lookup loc store
       return val
     Nothing -> do
-      liftIO $ putStrLn "Variable not found"
+      throwError $ VariableNotFound $ show i
       return (IntVal 0)

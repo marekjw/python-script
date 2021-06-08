@@ -6,4 +6,16 @@ int main(){
     int a = 3, b = 4;
     f(a, b);
     f(3, 7);
+    return 0;
 }
+
+print(main());
+
+void test_fn(&int x){
+    x = x + 1;
+}
+
+int a = 1;
+print("BEFORE TEST:", a);
+test_fn(a);
+print("AFTER TEST: ", a);
