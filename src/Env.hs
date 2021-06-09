@@ -49,4 +49,3 @@ getMem (Ident i) = do
       return val
     Nothing -> do
       throwError $ VariableNotFound $ show i
-      return (IntVal 0)

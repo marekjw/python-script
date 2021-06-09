@@ -186,14 +186,22 @@ execStmt (Decr ident) = do
 -- if
 execStmt (Cond cond stmt) = do
   BoolVal res <- evalExpression cond
+  env <- ask
   if res
-    then execStmt stmt
+    then do
+      (_, res) <- execStmt stmt
+      return (env, res)
     else returnNothing
 execStmt (CondElse cond a b) = do
   BoolVal res <- evalExpression cond
+  env <- ask
   if res
-    then execStmt a
-    else execStmt b
+    then do
+      (_, res) <- execStmt a
+      return (env, res)
+    else do
+      (_, res) <- execStmt b
+      return (env, res)
 
 -- while
 execStmt (While e code) = do
@@ -202,7 +210,8 @@ execStmt (While e code) = do
   if res
     then do
       execStmt code
-      execStmt (While e code)
+      (_, res) <- execStmt (While e code)
+      return (env, res)
     else return (env, Nothing)
 
 -- for loop

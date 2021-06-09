@@ -68,3 +68,15 @@ data RuntimeExceptions
   deriving (Show)
 
 type Context = ReaderT MyEnv (StateT MyStore (ExceptT RuntimeExceptions IO))
+
+data TypeCheckExceptions
+  = TypeError
+  | VariableNotDeclared
+  | IncreasingNotInt
+  | ConditionIsNotBool
+  | WrongReturnType
+  deriving (Show)
+
+type TypeEnv = Map.Map VariableName Type
+
+type TypeContext = ReaderT TypeEnv (ExceptT TypeCheckExceptions IO)
