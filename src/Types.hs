@@ -73,6 +73,7 @@ data TypeCheckExceptions
   = TypeError
   | VariableNotDeclared
   | IncreasingNotInt
+  | CannotDoMathOnNotInt
   | ConditionIsNotBool
   | WrongReturnType
   deriving (Show)

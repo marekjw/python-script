@@ -11,6 +11,7 @@ import PythonScript.Skel ()
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure, exitSuccess)
 import System.IO (getContents, hGetContents, hPutStr, hPutStrLn, print, stderr, stdin)
+import TypeCheck
 import Prelude
   ( Either (..),
     FilePath,
@@ -42,10 +43,16 @@ run p s =
       putStrLn err
       exitFailure
     Right (Program statements) -> do
-      result <- runProgram statements
-      case result of
-        Right _ -> exitSuccess
-        Left err -> print err
+      typeCheckRes <- checkProgram statements
+      case typeCheckRes of
+        Left err -> do
+          print err
+          exitFailure
+        Right _ -> do
+          result <- runProgram statements
+          case result of
+            Right _ -> exitSuccess
+            Left err -> print err
   where
     ts = myLexer s
 

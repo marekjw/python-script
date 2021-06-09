@@ -1,4 +1,4 @@
-module Interpreter where
+module TypeCheck where
 
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -27,7 +27,35 @@ chckDeclareVars t items = do
   foldM (chckDeclareVar t) env items
 
 checkExpression :: Expr -> TypeContext Type
-checkExpression _ = return Void
+-- literals
+checkExpression (EString _) = return Str
+checkExpression (ELitInt _) = return Int
+checkExpression ELitTrue = return Bool
+checkExpression ELitFalse = return Bool
+checkExpression (ELitChar _) = return Char
+-- variables
+checkExpression (EVar ident) =
+  getTypeMem ident
+-- math
+checkExpression (EAdd x op y) = do
+  xt <- checkExpression x
+  yt <- checkExpression y
+  case (xt, yt) of
+    (Int, Int) -> return Int
+    _ -> throwError CannotDoMathOnNotInt
+checkExpression (Neg e) = do
+  et <- checkExpression e
+  case et of
+    Int -> return Int
+    _ -> throwError CannotDoMathOnNotInt
+checkExpression (EMul x _ y) = do
+  xt <- checkExpression x
+  yt <- checkExpression y
+  case (xt, yt) of
+    (Int, Int) -> return Int
+    _ -> throwError CannotDoMathOnNotInt
+
+-- logical operations
 
 checkExpressions :: [Expr] -> TypeContext ()
 checkExpressions exprs = do
