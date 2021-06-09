@@ -12,3 +12,4 @@ interpreter:
 clean:
 	- cd src/PythonScript; rm *
 	- cd src; rm *.hi *.o
+	- rm interpreter
