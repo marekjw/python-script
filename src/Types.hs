@@ -76,7 +76,7 @@ data TypeCheckExceptions
   | CannotDoMathOnNotInt
   | ConditionIsNotBool
   | WrongReturnType
-  | IsNotCallable
+  | IsNotCallable String
   | CannotPassValueBuReference
   | WrongArgumentCount
   deriving (Show)

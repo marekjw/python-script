@@ -103,7 +103,7 @@ UnpackRec.    UnpackedArg ::= UnpackedTuple;
 
 LambdaFun. Type ::= "\\(" [FunType] ")" "=>" Type;
 
-LambdaFunVal. Expr7 ::= "\\(" [Arg] ")" "=>" Stmt;
+LambdaFunVal. Expr7 ::= "\\(" [Arg] ")" "=>" "[" Type "]" Stmt;
 
 -- GENERATORS ---------------------------------------------
 

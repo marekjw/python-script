@@ -12,6 +12,10 @@ import TypeEnv
 import Types
 
 parseFuncArg :: Arg -> FunType
+parseFuncArg (Arg (ByReference (LambdaFun args t)) _) =
+  ByReference $ Fun t args
+parseFuncArg (Arg (PythonScript.Abs.ByValue (LambdaFun args t)) _) =
+  PythonScript.Abs.ByValue $ Fun t args
 parseFuncArg (Arg t _) = t
 
 checkFunArgs :: [FunType] -> [Expr] -> TypeContext ()
@@ -58,6 +62,10 @@ initTypeArgs :: [Arg] -> TypeEnv -> TypeContext TypeEnv
 initTypeArgs [] res = return res
 initTypeArgs (Arg ftype ident : rest) env = do
   case ftype of
+    ByReference (LambdaFun args ltype) ->
+      initTypeArgs (Arg (ByReference (Fun ltype args)) ident : rest) env
+    PythonScript.Abs.ByValue (LambdaFun args ltype) ->
+      initTypeArgs (Arg (PythonScript.Abs.ByValue (Fun ltype args)) ident : rest) env
     ByReference t -> do
       next_env <- newTypeMem ident t env
       initTypeArgs rest next_env
@@ -65,8 +73,9 @@ initTypeArgs (Arg ftype ident : rest) env = do
       next_env <- newTypeMem ident t env
       initTypeArgs rest next_env
 
--- TODO tuple
 chckDeclareVar :: Type -> TypeEnv -> Item -> TypeContext TypeEnv
+chckDeclareVar (LambdaFun args t) env item =
+  chckDeclareVar (Fun t args) env item
 chckDeclareVar t env (Init name e) = do
   et <- checkExpression e
   if et /= t
@@ -128,8 +137,17 @@ checkExpression (EApp ident args) = do
     Fun t fargs -> do
       checkFunArgs fargs args
       return t
-    _ -> throwError IsNotCallable
+    _ -> do
+      let (Ident name) = ident
+      throwError $ IsNotCallable name
+
 -- lambda function
+
+checkExpression (LambdaFunVal args t code) = do
+  env <- ask
+  f_env <- initTypeArgs args env
+  local (const f_env) (checkStatement code t)
+  return $ Fun t (Data.List.map parseFuncArg args)
 
 -- tuples expressions
 checkExpression (ETuple exprs) = do

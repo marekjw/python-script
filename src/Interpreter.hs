@@ -120,7 +120,7 @@ evalExpression (EApp ident args) = do
 
 -- lambda function
 
-evalExpression (LambdaFunVal args code) = do
+evalExpression (LambdaFunVal args _ code) = do
   env <- ask
   case code of
     (BStmt block) -> do
