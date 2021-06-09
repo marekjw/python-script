@@ -24,7 +24,7 @@ rewireMem :: Ident -> Ident -> MyEnv -> Context MyEnv
 rewireMem (Ident prvsI) (Ident newI) env = do
   loc <- findLoc (Ident prvsI)
   case loc of
-    Nothing -> throwError $ VariableNotFound $ show prvsI
+    Nothing -> throwError $ VariableNotFound prvsI
     Just l -> do
       let env_updated = Map.insert newI l env
       return env_updated

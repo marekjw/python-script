@@ -11,6 +11,39 @@ import Tuples
 import TypeEnv
 import Types
 
+parseFuncArg :: Arg -> FunType
+parseFuncArg (Arg t _) = t
+
+checkFunArgs :: [FunType] -> [Expr] -> TypeContext ()
+checkFunArgs [] [] = pure ()
+checkFunArgs (farg : frest) (expr : erest) = do
+  case farg of
+    PythonScript.Abs.ByValue t -> do
+      et <- checkExpression expr
+      if t /= et
+        then throwError TypeError
+        else checkFunArgs frest erest
+    ByReference t -> do
+      case expr of
+        EVar ident -> do
+          et <- getTypeMem ident
+          if et /= t
+            then throwError TypeError
+            else checkFunArgs frest erest
+        _ -> throwError CannotPassValueBuReference
+checkFunArgs _ _ = throwError WrongArgumentCount
+
+initTypeArgs :: [Arg] -> TypeEnv -> TypeContext TypeEnv
+initTypeArgs [] res = return res
+initTypeArgs (Arg ftype ident : rest) env = do
+  case ftype of
+    ByReference t -> do
+      next_env <- newTypeMem ident t env
+      initTypeArgs rest next_env
+    PythonScript.Abs.ByValue t -> do
+      next_env <- newTypeMem ident t env
+      initTypeArgs rest next_env
+
 -- TODO tuple
 chckDeclareVar :: Type -> TypeEnv -> Item -> TypeContext TypeEnv
 chckDeclareVar t env (Init name e) = do
@@ -56,6 +89,31 @@ checkExpression (EMul x _ y) = do
     _ -> throwError CannotDoMathOnNotInt
 
 -- logical operations
+checkExpression (ERel a op b) = do
+  at <- checkExpression a
+  bt <- checkExpression b
+  case (at, op, bt) of
+    (Int, _, Int) -> return Bool
+    (Char, _, Char) -> return Bool
+    (Bool, _, Bool) -> return Bool
+    (Str, _, Str) -> return Bool
+    (TupleType _, EQU, TupleType _) -> return Bool
+    (_, _, _) -> throwError TypeError
+
+-- call function
+checkExpression (EApp ident args) = do
+  ftype <- getTypeMem ident
+  case ftype of
+    Fun t fargs -> do
+      checkFunArgs fargs args
+      return t
+    _ -> throwError IsNotCallable
+-- lambda function
+
+-- tuples expressions
+
+-- TODO delete this
+checkExpression _ = return Void
 
 checkExpressions :: [Expr] -> TypeContext ()
 checkExpressions exprs = do
@@ -116,18 +174,27 @@ checkStatement (While e code) t = do
 -- for loop
 checkStatement (ForLoop init cond inc code) t = do
   env <- ask
-  et <- checkExpression cond
-  case et of
-    Bool -> do
-      checkStatement init t
-      checkStatement inc t
-      checkStatement code t
-    _ -> throwError ConditionIsNotBool
+  for_env <- checkStatement init t
+  local
+    (const for_env)
+    ( do
+        et <- checkExpression cond
+        case et of
+          Bool -> do
+            checkStatement inc t
+            checkStatement code t
+            return env
+          _ -> throwError ConditionIsNotBool
+    )
 
 -- functions
-
--- TODO def
-
+checkStatement (FnDef t ident args code) _ = do
+  env <- ask
+  res_env <- newTypeMem ident (Fun t (Data.List.map parseFuncArg args)) env
+  f_env <- initTypeArgs args res_env
+  let (Block stmts) = code
+  local (const f_env) $ checkStatements stmts t
+  return res_env
 checkStatement (Ret expr) t = do
   et <- checkExpression expr
   if et == t
@@ -137,12 +204,18 @@ checkStatement VRet t =
   case t of
     Void -> returnNothing
     _ -> throwError WrongReturnType
+-- expression statement
+checkStatement (SExp e) _ = do
+  checkExpression e
+  returnNothing
+
 -- tuples
 
 -- generators
 
 -- empty
 checkStatement Empty _ = returnNothing
+checkStatement _ _ = returnNothing
 
 checkStatements :: [Stmt] -> Type -> TypeContext TypeEnv
 checkStatements [] _ = returnNothing

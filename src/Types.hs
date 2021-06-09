@@ -71,11 +71,14 @@ type Context = ReaderT MyEnv (StateT MyStore (ExceptT RuntimeExceptions IO))
 
 data TypeCheckExceptions
   = TypeError
-  | VariableNotDeclared
+  | VariableNotDeclared String
   | IncreasingNotInt
   | CannotDoMathOnNotInt
   | ConditionIsNotBool
   | WrongReturnType
+  | IsNotCallable
+  | CannotPassValueBuReference
+  | WrongArgumentCount
   deriving (Show)
 
 type TypeEnv = Map.Map VariableName Type

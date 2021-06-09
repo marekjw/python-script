@@ -19,4 +19,5 @@ getTypeMem (Ident i) = do
   let et = Map.lookup i env
   case et of
     Just et -> return et
-    Nothing -> throwError VariableNotDeclared
+    Nothing ->
+      throwError $ VariableNotDeclared i
