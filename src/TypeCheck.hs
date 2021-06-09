@@ -33,6 +33,27 @@ checkFunArgs (farg : frest) (expr : erest) = do
         _ -> throwError CannotPassValueBuReference
 checkFunArgs _ _ = throwError WrongArgumentCount
 
+checkTupleUnpack :: [Type] -> [UnpackedArg] -> TypeEnv -> TypeContext TypeEnv
+checkTupleUnpack [] [] env = return env
+checkTupleUnpack (t : trest) (arg : arest) env = do
+  case (t, arg) of
+    (atype, UnpackAssign ident) -> do
+      at <- getTypeMem ident
+      if atype /= at
+        then throwError TypeError
+        else checkTupleUnpack trest arest env
+    (atype, UnpackDeclare t ident) -> do
+      if atype /= t
+        then throwError TypeError
+        else do
+          env_upd <- newTypeMem ident t env
+          checkTupleUnpack trest arest env_upd
+    (TupleType types, UnpackRec (TupleUnpackStruct args)) -> do
+      env_upd <- checkTupleUnpack types args env
+      checkTupleUnpack trest arest env_upd
+    (_, _) -> throwError TypeError
+checkTupleUnpack _ _ _ = throwError TypeError
+
 initTypeArgs :: [Arg] -> TypeEnv -> TypeContext TypeEnv
 initTypeArgs [] res = return res
 initTypeArgs (Arg ftype ident : rest) env = do
@@ -111,13 +132,15 @@ checkExpression (EApp ident args) = do
 -- lambda function
 
 -- tuples expressions
-
+checkExpression (ETuple exprs) = do
+  res <- checkExpressions exprs
+  return $ TupleType res
 -- TODO delete this
 checkExpression _ = return Void
 
-checkExpressions :: [Expr] -> TypeContext ()
+checkExpressions :: [Expr] -> TypeContext [Type]
 checkExpressions exprs = do
-  mapM_ checkExpression exprs
+  mapM checkExpression exprs
 
 returnNothing :: TypeContext TypeEnv
 returnNothing = do
@@ -210,6 +233,13 @@ checkStatement (SExp e) _ = do
   returnNothing
 
 -- tuples
+checkStatement (TupleUnpack (TupleUnpackStruct unpacked) expr) _ = do
+  et <- checkExpression expr
+  case et of
+    TupleType types -> do
+      env <- ask
+      checkTupleUnpack types unpacked env
+    _ -> throwError TypeError
 
 -- generators
 
